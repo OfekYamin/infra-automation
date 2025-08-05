@@ -27,10 +27,10 @@ The main goal is to develop a modular Python-based automation tool that:
 
 ```
 infra-automation/
-├── configs/
+├── configs/ # Will be created upon first application run
 │   ├── instances.json      # Machine configurations in JSON format
 │   └── instances.txt       # Human-readable machine summary
-├── logs/
+├── logs/ # Will be created upon first application run
 │   └── provisioning.log    # Application and service installation logs
 ├── scripts/
 │   ├── infra_simulator.py  # Main Python application
@@ -243,7 +243,7 @@ This project is designed to evolve and will be extended to include:
 ### Log Files:
 
 Check `logs/provisioning.log` for detailed error messages and debugging information.
+Check `configs/instances.json` for instance details in json format.
+Check `configs/instances.txt` for instance details in human readable format.
 
-## Contributing
 
-This is a learning project. Feel free to experiment and extend the functionality while maintaining the modular structure and logging requirements.
