@@ -6,6 +6,6 @@ __pycache__/
 
 # Ignore log files.
 machine_creation.log
-*.txt
+instances.txt
 *.log
 *.json
