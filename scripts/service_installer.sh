@@ -51,7 +51,7 @@ while true; do
     fi
 
     # Log selected service
-    log_message "Selected service: $service"
+    log_message "Selected service: $service, Starting installation...""
 
     # Simulated installation
     case "$service" in
