@@ -160,7 +160,7 @@ def get_os():
     def validate(os_name):
         os_name = os_name.lower()
         if os_name not in Machine.supported_os:
-            raise ValueError(f"Unsupported OS. Choose from: {Machine.supported_os}")
+            raise ValueError(f"Unsupported OS. Choose from: Linux/Unix/MacOS/Windows")
         return os_name
     return get_input("Enter OS (Linux/Unix/Windows/MacOS): ", validate)
 
