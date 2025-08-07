@@ -19,12 +19,15 @@ services["terraform"]="true"
 
 # Service installation loop
 while true; do
-    # Error handling for read command
-    if ! read -p "Enter the service you want to install (nginx, docker, terraform): " service; then
+    # Read user input
+    if ! read -p "Enter the service you want to install (Nginx, Docker, Terraform): " service; then
         log_message "ERROR: Failed to read user input"
         echo "Error: Failed to read input. Please try again."
         continue
     fi
+
+    # Convert input to lowercase
+    service="${service,,}"
 
     # Exit check
     if [[ "$service" == "exit" ]]; then
@@ -59,7 +62,6 @@ while true; do
             sleep 2
             echo "Checking dependencies..."
             sleep 2
-            echo "Nginx installed successfully!"
             ;;
         "docker")
             echo "Checking if Docker is already installed..."
@@ -68,7 +70,6 @@ while true; do
             sleep 2
             echo "Checking dependencies..."
             sleep 2
-            echo "Docker installed successfully!"
             ;;
         "terraform")
             echo "Checking if Terraform is already installed..."
@@ -77,7 +78,6 @@ while true; do
             sleep 2
             echo "Checking dependencies..."
             sleep 2
-            echo "Terraform installed successfully!"
             ;;
     esac
 

@@ -301,7 +301,7 @@ def service_installer():
 # Main execution block
 if __name__ == "__main__":
     try:
-        logging.info("=== Infrastructure Simulator Started ===")
+        logging.info("====================================== Infrastructure Simulator Started ======================================")
         
         if len(sys.argv) > 1 and sys.argv[1].lower() == "clear":
             logging.info("[MAIN] Clear command detected")
@@ -347,6 +347,6 @@ if __name__ == "__main__":
         logging.error(f"[MAIN] Critical error in main execution: {e}")
         print(f"Critical error: {e}")
     finally:
-        logging.info("=== Infrastructure Simulator Ended ===")
+        logging.info("====================================== Infrastructure Simulator Ended ======================================")
     
    
