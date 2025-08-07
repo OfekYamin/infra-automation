@@ -347,6 +347,6 @@ if __name__ == "__main__":
         logging.error(f"[MAIN] Critical error in main execution: {e}")
         print(f"Critical error: {e}")
     finally:
-        logging.info("====================================== Infrastructure Simulator Ended ======================================")
+        logging.info("====================================== Infrastructure Simulator Ended ========================================")
     
    
