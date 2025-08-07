@@ -54,7 +54,7 @@ infra-automation/
 1. **Clone the repository**:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/OfekYamin/infra-automation
    cd infra-automation
    ```
 
@@ -153,8 +153,10 @@ Enter RAM in GB: 8
 Created: webserver01 | OS: linux | CPU: 4 | RAM: 8GB
 
 Do you want to install a service on this machine? (y/n): y
-Available services: nginx, docker, terraform
-Enter the service you want to install: nginx
+Available services: Nginx, Docker, Terraform
+Enter the service you want to install: Nginx
+Checking if Nginx is already installed
+Checking dependencies...
 Installing Nginx...
 Nginx installed successfully!
 
