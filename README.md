@@ -3,6 +3,8 @@
 ## Project Overview
 
 This is a rolling project that simulates infrastructure provisioning and service configuration automation. The project serves as a foundation for learning DevOps practices and will evolve to integrate real cloud infrastructure tools like AWS and Terraform in future stages.
+
+
 NOTICE : THIS PROGRAM ONLY WORKS IN LINUX
 ## Project Objectives
 
