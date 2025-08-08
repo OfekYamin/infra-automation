@@ -192,7 +192,8 @@ Instance #1
 ------------------------------
 ```
 
-#### `logs/provisioning.log`: # provisioning.log will hold up to 250kb of data, when it reaches that amount the script will create 2 back up files and erase the original file.
+#### `logs/provisioning.log`:
+# provisioning.log will hold up to 250kb of data, when it reaches that amount the script will create 2 back up files and erase the original file.
 
 ```
 2025-08-02 21:45:23,456 - INFO - [CREATION] Provisioning started for new machine.
