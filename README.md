@@ -21,7 +21,7 @@ The main goal is to develop a modular Python-based automation tool that:
 - ✅ **Input Validation**: Comprehensive validation for machine names, OS types, CPU cores, and RAM
 - ✅ **Modular Design**: Clean separation of concerns with Machine class and utility functions
 - ✅ **Service Automation**: Bash script integration for service installation (Nginx, Docker, Terraform)
-- ✅ **Logging System+Log rotation**: Detailed logging to `logs/provisioning.log` for debugging and monitoring,'provisioning.log' will also have backup files and automatic log rotation.
+- ✅ **Logging System+Log rotation**: Detailed logging to `logs/provisioning.log` for debugging and monitoring,provisioning.log will also have backup files and automatic log rotation
 - ✅ **Configuration Management**: JSON storage with human-readable summaries
 - ✅ **Error Handling**: Robust error handling throughout the application
 
