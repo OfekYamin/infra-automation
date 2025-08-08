@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 import logging
 import subprocess
+from logging.handlers import RotatingFileHandler
 
 # Storing the project root directory as a variable for future use
 project_root = Path(__file__).resolve().parent.parent
@@ -30,7 +31,11 @@ def setup_logging(log_file_path):
     infra_logger.propagate = False
 
     if not infra_logger.handlers:
-        file_handler = logging.FileHandler(log_file_path)
+        file_handler = RotatingFileHandler(
+            log_file_path,
+            maxBytes=250 * 1024,  # 250 KB log file size limit
+            backupCount=2         # Keep 2 backup log file
+        )
         file_handler.setLevel(logging.INFO)
 
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -40,10 +45,7 @@ def setup_logging(log_file_path):
 
 setup_logging(Provisioning_Log_File)
 
-
 from src.machine import Machine
-
-
 
 # Load VM instances
 def load_instances():
@@ -64,8 +66,6 @@ def load_instances():
     except Exception as e:
         infra_logger.error(f"[LOAD] Unexpected error loading instances: {e}")
         return []
-
-
 
 # Save VM instance
 def save_instance(instance_data):
