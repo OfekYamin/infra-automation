@@ -5,6 +5,7 @@ from pathlib import Path
 import logging
 import subprocess
 
+# Storing the project root directory as a variable for future use
 project_root = Path(__file__).resolve().parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
@@ -21,25 +22,24 @@ script_path = project_root / "scripts" / "service_installer.sh"
 Configs_Path.mkdir(parents=True, exist_ok=True)
 Logs_Path.mkdir(parents=True, exist_ok=True)
 
-# Logger setup
+# Named logger setup
+infra_logger = logging.getLogger("infra_simulator")
+
 def setup_logging(log_file_path):
-    
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    infra_logger.setLevel(logging.INFO)
+    infra_logger.propagate = False
 
-    logger.handlers.clear()
+    if not infra_logger.handlers:
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(log_file_path)
-    file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
 
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-
-    logger.addHandler(file_handler)
+        infra_logger.addHandler(file_handler)
 
 setup_logging(Provisioning_Log_File)
 
-# Log startup message to confirm logging is working
 
 from src.machine import Machine
 
@@ -48,21 +48,21 @@ from src.machine import Machine
 # Load VM instances
 def load_instances():
     if not JSON_Path.exists():
-        logging.info("[LOAD] instances.json file does not exist, creating empty list")
+        infra_logger.info("[LOAD] instances.json file does not exist, creating empty list")
         return []
     try:
         with open(JSON_Path, "r") as f:
             data = json.load(f)
-            logging.info(f"[LOAD] Successfully loaded {len(data)} instances from JSON file")
+            infra_logger.info(f"[LOAD] Successfully loaded {len(data)} instances from JSON file")
             return data if isinstance(data, list) else []
     except json.JSONDecodeError as e:
-        logging.error(f"[LOAD] JSON decode error in instances.json: {e}")
+        infra_logger.error(f"[LOAD] JSON decode error in instances.json: {e}")
         return []
     except FileNotFoundError as e:
-        logging.error(f"[LOAD] File not found error: {e}")
+        infra_logger.error(f"[LOAD] File not found error: {e}")
         return []
     except Exception as e:
-        logging.error(f"[LOAD] Unexpected error loading instances: {e}")
+        infra_logger.error(f"[LOAD] Unexpected error loading instances: {e}")
         return []
 
 
@@ -74,13 +74,13 @@ def save_instance(instance_data):
         data.append(instance_data)
         with open(JSON_Path, "w") as f:
             json.dump(data, f, indent=4)
-        logging.info(f"[SAVE] Successfully saved instance '{instance_data.get('name', 'unknown')}' to JSON file")
+        infra_logger.info(f"[SAVE] Successfully saved instance '{instance_data.get('name', 'unknown')}' to JSON file")
         write_human_readable_summary(data)
     except PermissionError as e:
-        logging.error(f"[SAVE] Permission denied when saving to JSON file: {e}")
+        infra_logger.error(f"[SAVE] Permission denied when saving to JSON file: {e}", exc_info=True)
         raise
     except Exception as e:
-        logging.error(f"[SAVE] Unexpected error saving instance: {e}")
+        infra_logger.error(f"[SAVE] Unexpected error saving instance: {e}", exc_info=True)
         raise
 
 
@@ -91,7 +91,7 @@ def write_human_readable_summary(instances):
         with open(TXT_Path, "w") as f:
             if not instances:
                 f.write("No VM instances available.\n")
-                logging.info("[SUMMARY] Wrote empty instances summary to text file")
+                infra_logger.info("[SUMMARY] Wrote empty instances summary to text file")
                 return
             for idx, vm in enumerate(instances, 1):
                 f.write(f"Instance #{idx}\n")
@@ -100,12 +100,12 @@ def write_human_readable_summary(instances):
                 f.write(f"  CPU: {vm['cpu']} cores\n")
                 f.write(f"  RAM: {vm['ram']} GB\n")
                 f.write("-" * 30 + "\n")
-        logging.info(f"[SUMMARY] Successfully wrote summary for {len(instances)} instances to text file")
+        infra_logger.info(f"[SUMMARY] Successfully wrote summary for {len(instances)} instances to text file")
     except PermissionError as e:
-        logging.error(f"[SUMMARY] Permission denied when writing to text file: {e}")
+        infra_logger.error(f"[SUMMARY] Permission denied when writing to text file: {e}", exc_info=True)
         raise
     except Exception as e:
-        logging.error(f"[SUMMARY] Unexpected error writing summary: {e}")
+        infra_logger.error(f"[SUMMARY] Unexpected error writing summary: {e}", exc_info=True)
         raise
 
 
@@ -117,26 +117,26 @@ def get_input(prompt, validator):
             value = input(prompt).strip()
             if value.lower() == "exit":
                 print("Exiting.")
-                logging.info("[EXIT] User exited input prompt.")
+                infra_logger.info("[EXIT] User exited input prompt.")
                 exit()
             if not value:
-                logging.warning("[INPUT] Empty input received, prompting again")
+                infra_logger.warning("[INPUT] Empty input received, prompting again")
                 print("Error: Input cannot be empty.")
                 continue
             return validator(value)
         except ValueError as e:
             print(f"Error: {e}")
-            logging.warning(f"[INPUT] Validation error: {e}")
+            infra_logger.warning(f"[INPUT] Validation error: {e}")
         except KeyboardInterrupt:
-            logging.info("[EXIT] User interrupted with Ctrl+C")
+            infra_logger.info("[EXIT] User interrupted with Ctrl+C")
             print("\nExiting.")
             exit()
         except EOFError:
-            logging.info("[EXIT] User triggered EOF (Ctrl+D)")
+            infra_logger.info("[EXIT] User triggered EOF (Ctrl+D)")
             print("\nExiting.")
             exit()
         except Exception as e:
-            logging.error(f"[INPUT] Unexpected error during input: {e}")
+            infra_logger.error(f"[INPUT] Unexpected error during input: {e}", exc_info=True)
             print(f"Unexpected error: {e}")
 
 
@@ -193,46 +193,46 @@ def get_ram():
 
 # Create machine
 def create_machine():
-    logging.info("[CREATION] Provisioning started for new machine.")
+    infra_logger.info("[CREATION] Provisioning started for new machine.")
 
     try:
         existing_data = load_instances()
         existing_names = {item["name"] for item in existing_data}
-        logging.info(f"[CREATION] Found {len(existing_names)} existing machine names")
+        infra_logger.info(f"[CREATION] Found {len(existing_names)} existing machine names")
 
         # Name Logging
-        logging.info("[CREATION] Prompting user for machine name.")
+        infra_logger.info("[CREATION] Prompting user for machine name.")
         name = get_machine_name(existing_names)
-        logging.info(f"[CREATION] Machine name received: {name}")
+        infra_logger.info(f"[CREATION] Machine name received: {name}")
 
         # OS Logging
-        logging.info("[CREATION] Prompting user for operating system.")
+        infra_logger.info("[CREATION] Prompting user for operating system.")
         os = get_os()
-        logging.info(f"[CREATION] Operating system selected: {os}")
+        infra_logger.info(f"[CREATION] Operating system selected: {os}")
 
         # CPU Logging
-        logging.info("[CREATION] Prompting user for number of CPU cores.")
+        infra_logger.info("[CREATION] Prompting user for number of CPU cores.")
         cpu = get_cpu()
-        logging.info(f"[CREATION] CPU cores selected: {cpu}")
+        infra_logger.info(f"[CREATION] CPU cores selected: {cpu}")
 
         # RAM Logging
-        logging.info("[CREATION] Prompting user for RAM amount.")
+        infra_logger.info("[CREATION] Prompting user for RAM amount.")
         ram = get_ram()
-        logging.info(f"[CREATION] RAM selected: {ram} GB")
+        infra_logger.info(f"[CREATION] RAM selected: {ram} GB")
 
         # Machine creation
-        logging.info(f"[CREATION] Creating Machine object with: name={name}, os={os}, cpu={cpu}, ram={ram}")
+        infra_logger.info(f"[CREATION] Creating Machine object with: name={name}, os={os}, cpu={cpu}, ram={ram}")
         machine = Machine(name=name, os=os, cpu=cpu, ram=ram)
         print("Created:", machine)
         
         # Save to files
-        logging.info("[CREATION] Saving machine instance to files")
+        infra_logger.info("[CREATION] Saving machine instance to files")
         save_instance(machine.as_dict)
-        logging.info(f"[CREATION] Provisioning successful for machine '{name}'.")
+        infra_logger.info(f"[CREATION] Provisioning successful for machine '{name}'.")
         return machine
         
     except Exception as e:
-        logging.error(f"[CREATION] Provisioning failed: {e}")
+        infra_logger.error(f"[CREATION] Provisioning failed: {e}", exc_info=True)
         print("Failed to create machine:", e)
         return None
     
@@ -241,22 +241,22 @@ def create_machine():
 # Clear log files function
 def clear_instances():
     try:
-        logging.info("[CLEAR] Starting to clear all VM instances")
+        infra_logger.info("[CLEAR] Starting to clear all VM instances")
         with open(JSON_Path, "w") as f:
             json.dump([], f, indent=4)
-        logging.info("[CLEAR] Successfully cleared JSON file")
+        infra_logger.info("[CLEAR] Successfully cleared JSON file")
         
         write_human_readable_summary([])
-        logging.info("[CLEAR] Successfully cleared text summary file")
+        infra_logger.info("[CLEAR] Successfully cleared text summary file")
         
-        logging.info("[CLEAR] All VM instances cleared successfully")
+        infra_logger.info("[CLEAR] All VM instances cleared successfully")
         print("All VM instances cleared.")
     except PermissionError as e:
-        logging.error(f"[CLEAR] Permission denied when clearing files: {e}")
+        infra_logger.error(f"[CLEAR] Permission denied when clearing files: {e}", exc_info=True)
         print("Error: Permission denied when clearing files.")
         raise
     except Exception as e:
-        logging.error(f"[CLEAR] Unexpected error clearing instances: {e}")
+        infra_logger.error(f"[CLEAR] Unexpected error clearing instances: {e}", exc_info=True)
         print("Error: Failed to clear instances.")
         raise
 
@@ -265,34 +265,34 @@ def clear_instances():
 # Install service
 def service_installer():
     try:
-        logging.info("[INSTALL] Service installation started")
-        logging.info(f"[INSTALL] Executing bash script: {script_path}")
+        infra_logger.info("[INSTALL] Service installation started")
+        infra_logger.info(f"[INSTALL] Executing bash script: {script_path}")
         
         if not script_path.exists():
-            logging.error(f"[INSTALL] Bash script not found: {script_path}")
+            infra_logger.error(f"[INSTALL] Bash script not found: {script_path}", exc_info=True)
             print(f"Error: Service installer script not found at {script_path}")
             return None
             
         # Run the bash script interactively (not capturing output to allow user input)
         result = subprocess.run(["bash", str(script_path)], check=True)
-        logging.info("[INSTALL] Service installation completed successfully")
+        infra_logger.info("[INSTALL] Service installation completed successfully")
         
         return "Service installation completed"
         
     except subprocess.CalledProcessError as e:
         if e.returncode == 99:
-            logging.info("[EXIT] Service installation exited by user")
+            infra_logger.info("[EXIT] Service installation exited by user")
             print("Exiting program.")
             exit()
-        logging.error(f"[INSTALL] Service installation failed with return code {e.returncode}")
+        infra_logger.error(f"[INSTALL] Service installation failed with return code {e.returncode}", exc_info=True)
         print(f"Error: Service installation failed (return code: {e.returncode})")
         return None
     except FileNotFoundError:
-        logging.error("[INSTALL] Bash command not found - bash not installed or not in PATH")
+        infra_logger.error("[INSTALL] Bash command not found - bash not installed or not in PATH", exc_info=True)
         print("Error: Bash not found. Please install Git Bash or WSL on Windows.")
         return None
     except Exception as e:
-        logging.error(f"[INSTALL] Unexpected error during service installation: {e}")
+        infra_logger.error(f"[INSTALL] Unexpected error during service installation: {e}", exc_info=True)
         print(f"Error: Unexpected error during service installation: {e}")
         return None
 
@@ -301,52 +301,52 @@ def service_installer():
 # Main execution block
 if __name__ == "__main__":
     try:
-        logging.info("====================================== Infrastructure Simulator Started ======================================")
+        infra_logger.info("====================================== Infrastructure Simulator Started ======================================")
         
         if len(sys.argv) > 1 and sys.argv[1].lower() == "clear":
-            logging.info("[MAIN] Clear command detected")
+            infra_logger.info("[MAIN] Clear command detected")
             clear_instances()
         else:
             print("Welcome to the VM instance creator!\nType 'exit' at any prompt to quit.")
-            logging.info("[MAIN] Starting interactive VM creation session")
+            infra_logger.info("[MAIN] Starting interactive VM creation session")
             
             while True:
                 try:
                     machine = create_machine()
                     if not machine:
-                        logging.warning("[MAIN] Machine creation failed, continuing to next iteration")
+                        infra_logger.warning("[MAIN] Machine creation failed, continuing to next iteration")
                         continue
 
                     install = input("Do you want to install a service on this machine? (y/n): ").strip().lower()
                     if install in ("y", "yes"):
-                        logging.info("[MAIN] User requested service installation")
+                        infra_logger.info("[MAIN] User requested service installation")
                         result = service_installer()
                         if result:
-                            logging.info("[MAIN] Service installation completed successfully")
+                            infra_logger.info("[MAIN] Service installation completed successfully")
                         else:
-                            logging.warning("[MAIN] Service installation failed or was cancelled")
+                            infra_logger.warning("[MAIN] Service installation failed or was cancelled")
                     else:
-                        logging.info("[MAIN] User declined service installation")
+                        infra_logger.info("[MAIN] User declined service installation")
 
                     again = input("Create another machine? (y/n): ").strip().lower()
                     if again not in ("y", "yes"):
-                        logging.info("[MAIN] User chose to exit")
+                        infra_logger.info("[MAIN] User chose to exit")
                         print("Exiting.")
                         break
                         
                 except KeyboardInterrupt:
-                    logging.info("[MAIN] User interrupted the process with Ctrl+C")
+                    infra_logger.info("[MAIN] User interrupted the process with Ctrl+C")
                     print("\nProcess interrupted by user.")
                     break
                 except Exception as e:
-                    logging.error(f"[MAIN] Unexpected error in main loop: {e}")
+                    infra_logger.error(f"[MAIN] Unexpected error in main loop: {e}", exc_info=True)
                     print(f"An error occurred: {e}")
                     continue
                     
     except Exception as e:
-        logging.error(f"[MAIN] Critical error in main execution: {e}")
+        infra_logger.error(f"[MAIN] Critical error in main execution: {e}", exc_info=True)
         print(f"Critical error: {e}")
     finally:
-        logging.info("====================================== Infrastructure Simulator Ended ========================================")
+        infra_logger.info("====================================== Infrastructure Simulator Ended ========================================")
     
    
